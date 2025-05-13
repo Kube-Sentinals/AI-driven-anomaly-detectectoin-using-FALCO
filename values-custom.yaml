@@ -1,0 +1,56 @@
+customRules:
+  custom-rules.yaml: |
+    # Rule: Detect access to /tmp/test
+    - rule: Access to /tmp/test
+      desc: Detects read/write access to /tmp/test
+      condition: (evt.type in (open, openat) and fd.name = "/tmp/test")
+      output: "⚠️ File /tmp/test accessed by user=%user.name command=%proc.cmdline"
+      priority: WARNING
+      tags: [filesystem]
+
+    # Rule: Detect execution of suspicious network tools (nc, curl, wget, etc.)
+    - rule: Suspicious Command Execution
+      desc: Detects execution of known suspicious networking tools
+      condition: spawned_process and proc.name in (nc, ncat, wget, curl, telnet)
+      output: "❗ Suspicious command: %proc.name run by user=%user.name in container=%container.name"
+      priority: ERROR
+      tags: [process, intrusion]
+
+    # Rule: Detect spawning of shell processes (e.g., bash, sh, zsh)
+    - rule: Shell Spawn Detection
+      desc: Detects spawning of shell processes like bash or sh
+      condition: spawned_process and proc.name in (bash, sh, zsh)
+      output: "⚠️ Shell spawned by user=%user.name command=%proc.cmdline"
+      priority: WARNING
+      tags: [process, shell, intrusion]
+
+    # Rule: Detect file modification
+    - rule: File Modification Detection
+      desc: Detects creation or modification of important files
+      condition: evt.type in (open, openat) and fd.name in (/etc/passwd, /etc/shadow, /etc/hostname)
+      output: "❗ Important file modified: %fd.name by user=%user.name command=%proc.cmdline"
+      priority: CRITICAL
+      tags: [filesystem, security]
+
+    # Rule: Detect potential privilege escalation via `sudo`
+    - rule: Privilege Escalation via Sudo
+      desc: Detects usage of sudo to execute commands
+      condition: proc.name = "sudo"
+      output: "⚠️ sudo command detected: user=%user.name command=%proc.cmdline"
+      priority: WARNING
+      tags: [process, privilege_escalation]
+
+    # Rule: Suspicious passwd usage
+    - rule: Suspicious passwd usage
+      desc: Detect usage of the passwd command inside containers
+      condition: container and proc.name=passwd
+      output: "Falco Alert: passwd command used in container (user=%user.name container=%container.id image=%container.image.repository command=%proc.cmdline)"
+      priority: WARNING
+      tags: [container, passed]
+
+
+
+
+
+
+

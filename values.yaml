@@ -1,0 +1,32 @@
+config:
+  inputs: |
+    [INPUT]
+        Name tail
+        Path /var/log/falco.log
+        Tag falco
+        Parser json
+        DB /var/log/flb_falco.db
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines On
+
+  outputs: |
+    [OUTPUT]
+        Name s3
+        Match falco
+        bucket your-falco-log-bucket
+        region us-east-1
+        total_file_size 5M
+        upload_timeout 10s
+        store_dir /tmp/flb-storage
+        s3_key_format falco_logs/$UUID.gz
+        compression gzip
+
+volumes:
+  - name: varlog
+    hostPath:
+      path: /var/log
+      type: Directory
+
+volumeMounts:
+  - name: varlog
+    mountPath: /var/log

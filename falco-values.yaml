@@ -1,0 +1,48 @@
+driver:
+  kind: modern-bpf
+
+falco:
+  jsonOutput: true
+  logLevel: info
+  file_output:
+    enabled: true
+    filename: /host/var/log/falco.log
+
+resources:
+  requests:
+    memory: 100Mi
+    cpu: 50m
+  limits:
+    memory: 200Mi
+    cpu: 100m
+
+affinity: {}
+tolerations: []
+nodeSelector: {}
+
+daemonset:
+  enabled: false
+
+deployment:
+  enabled: true
+  replicas: 1
+
+# ✅ Mount host /var/log into /host/var/log in container
+extraVolumes:
+  - name: host-varlog
+    hostPath:
+      path: /var/log
+      type: Directory
+
+extraVolumeMounts:
+  - name: host-varlog
+    mountPath: /host/var/log
+    readOnly: false
+
+
+# ✅ Add security context to allow file writing
+podSecurityContext:
+  fsGroup: 0
+
+containerSecurityContext:
+  privileged: true

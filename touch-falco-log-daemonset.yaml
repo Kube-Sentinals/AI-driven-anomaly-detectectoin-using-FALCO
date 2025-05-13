@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: create-falco-log
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: create-falco-log
+  template:
+    metadata:
+      labels:
+        name: create-falco-log
+    spec:
+      hostPID: true
+      containers:
+        - name: touch-log
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "✅ Creating /host/var/log/falco.log"
+              touch /host/var/log/falco.log
+              chmod 666 /host/var/log/falco.log
+              sleep 300
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: host-var-log
+              mountPath: /host/var/log
+      volumes:
+        - name: host-var-log
+          hostPath:
+            path: /var/log
+            type: Directory
+      restartPolicy: Always
